@@ -1,26 +1,33 @@
-import type { ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { LogOut } from "lucide-react";
 import { logout } from "@/app/auth/actions";
 import { Logo } from "@/components/logo";
+import { PageSkeleton } from "@/components/page-skeleton";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { createClient } from "@/lib/supabase/server";
+import { getUser, requireUser } from "@/lib/auth";
 
-export default async function DashboardLayout({
+async function UserEmail() {
+  const user = await getUser();
+  return (
+    <span className="hidden max-w-48 truncate text-sm text-muted sm:block">
+      {user?.email}
+    </span>
+  );
+}
+
+// Runs on the server for every dashboard page. Signed-out visitors are
+// sent to /login (proxy.ts also does this before the page renders).
+async function AuthGate({ children }: { children: ReactNode }) {
+  await requireUser();
+  return <>{children}</>;
+}
+
+export default function DashboardLayout({
   children,
 }: {
   children: ReactNode;
 }) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    redirect("/login");
-  }
-
   return (
     <div className="flex min-h-screen flex-col">
       <header className="sticky top-0 z-30 border-b bg-background/80 backdrop-blur">
@@ -29,9 +36,16 @@ export default async function DashboardLayout({
             <Logo />
           </Link>
           <div className="flex items-center gap-2">
-            <span className="hidden max-w-48 truncate text-sm text-muted sm:block">
-              {user.email}
-            </span>
+            <Suspense
+              fallback={
+                <span
+                  className="hidden h-4 w-40 animate-pulse rounded bg-surface-2 sm:block"
+                  aria-hidden="true"
+                />
+              }
+            >
+              <UserEmail />
+            </Suspense>
             <ThemeToggle />
             <form action={logout}>
               <button
@@ -46,7 +60,9 @@ export default async function DashboardLayout({
         </div>
       </header>
       <main className="mx-auto w-full max-w-5xl flex-1 px-5 py-8">
-        {children}
+        <Suspense fallback={<PageSkeleton />}>
+          <AuthGate>{children}</AuthGate>
+        </Suspense>
       </main>
     </div>
   );
