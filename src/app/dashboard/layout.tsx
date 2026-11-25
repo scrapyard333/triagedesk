@@ -7,11 +7,15 @@ import { PageSkeleton } from "@/components/page-skeleton";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { getUser, requireUser } from "@/lib/auth";
 
-async function UserEmail() {
+async function UserName() {
   const user = await getUser();
+  const fullName = user?.user_metadata?.full_name;
+  const label =
+    typeof fullName === "string" && fullName.trim() ? fullName : user?.email;
+
   return (
     <span className="hidden max-w-48 truncate text-sm text-muted sm:block">
-      {user?.email}
+      {label}
     </span>
   );
 }
@@ -44,7 +48,7 @@ export default function DashboardLayout({
                 />
               }
             >
-              <UserEmail />
+              <UserName />
             </Suspense>
             <ThemeToggle />
             <form action={logout}>

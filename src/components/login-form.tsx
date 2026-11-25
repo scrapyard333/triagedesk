@@ -1,18 +1,14 @@
 "use client";
 
 import { useActionState } from "react";
-import { CircleAlert, CircleCheck, LoaderCircle } from "lucide-react";
+import { CircleAlert, LoaderCircle } from "lucide-react";
+import { login } from "@/app/auth/actions";
+import { PasswordInput } from "@/components/password-input";
 import type { AuthState } from "@/lib/types";
 import { inputClass, primaryButtonClass } from "@/lib/ui";
 
-type Props = {
-  mode: "login" | "signup";
-  action: (state: AuthState, formData: FormData) => Promise<AuthState>;
-};
-
-export function AuthForm({ mode, action }: Props) {
-  const [state, formAction, pending] = useActionState(action, {} as AuthState);
-  const isLogin = mode === "login";
+export function LoginForm() {
+  const [state, formAction, pending] = useActionState(login, {} as AuthState);
 
   return (
     <form action={formAction} className="space-y-4" noValidate>
@@ -36,15 +32,12 @@ export function AuthForm({ mode, action }: Props) {
         <label htmlFor="password" className="text-sm font-medium">
           Password
         </label>
-        <input
+        <PasswordInput
           id="password"
           name="password"
-          type="password"
-          autoComplete={isLogin ? "current-password" : "new-password"}
+          autoComplete="current-password"
           required
-          minLength={8}
-          placeholder={isLogin ? "Your password" : "At least 8 characters"}
-          className={`${inputClass} h-11`}
+          placeholder="Your password"
         />
       </div>
 
@@ -58,16 +51,6 @@ export function AuthForm({ mode, action }: Props) {
         </p>
       )}
 
-      {state.message && (
-        <p
-          role="status"
-          className="flex items-start gap-2 rounded-xl bg-success/10 px-3 py-2.5 text-sm text-success"
-        >
-          <CircleCheck className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
-          {state.message}
-        </p>
-      )}
-
       <button
         type="submit"
         disabled={pending}
@@ -76,7 +59,7 @@ export function AuthForm({ mode, action }: Props) {
         {pending && (
           <LoaderCircle className="size-4 animate-spin" aria-hidden="true" />
         )}
-        {isLogin ? "Sign in" : "Create account"}
+        Sign in
       </button>
     </form>
   );

@@ -39,7 +39,7 @@ const steps = [
   },
   {
     title: "Triage",
-    text: "Claude reads each ticket, labels it and explains why.",
+    text: "AI reads each ticket, labels it and explains why.",
   },
   {
     title: "Resolve",
@@ -108,7 +108,7 @@ export default function Home() {
           <div className="mx-auto max-w-3xl animate-fade-up text-center">
             <span className="inline-flex items-center gap-2 rounded-full border bg-surface px-3 py-1 text-xs font-medium text-muted">
               <Sparkles className="size-3.5 text-primary" aria-hidden="true" />
-              AI support triage, powered by Claude
+              AI support triage, powered by Gemini
             </span>
             <h1 className="mt-6 text-balance text-4xl font-semibold tracking-tight sm:text-6xl">
               Triage support tickets in{" "}

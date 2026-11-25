@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { login } from "@/app/auth/actions";
-import { AuthForm } from "@/components/auth-form";
 import { AuthShell } from "@/components/auth-shell";
+import { LoginForm } from "@/components/login-form";
 
 export const metadata: Metadata = { title: "Sign in" };
 
@@ -23,7 +22,7 @@ export default function LoginPage() {
         </>
       }
     >
-      <AuthForm mode="login" action={login} />
+      <LoginForm />
     </AuthShell>
   );
 }
