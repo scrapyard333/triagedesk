@@ -3,8 +3,57 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import { triageTicket } from "@/lib/ai/triage";
 import { createClient } from "@/lib/supabase/server";
 import type { TicketField, TicketFormState } from "@/lib/types";
+
+// Protects your free AI quota: each user gets this many AI triages per day.
+const DAILY_TRIAGE_LIMIT = 25;
+
+type Db = Awaited<ReturnType<typeof createClient>>;
+
+async function runTriage(
+  supabase: Db,
+  id: string,
+  ticket: { customer_name: string; subject: string; body: string },
+): Promise<boolean> {
+  try {
+    const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    const { count } = await supabase
+      .from("tickets")
+      .select("id", { count: "exact", head: true })
+      .gte("triaged_at", since);
+    if ((count ?? 0) >= DAILY_TRIAGE_LIMIT) {
+      return false;
+    }
+
+    const result = await triageTicket(ticket);
+    const { error } = await supabase
+      .from("tickets")
+      .update({
+        category: result.category,
+        urgency: result.urgency,
+        sentiment: result.sentiment,
+        summary: result.summary,
+        suggested_reply: result.suggested_reply,
+        ai_confidence: result.confidence,
+        triaged_at: new Date().toISOString(),
+      })
+      .eq("id", id);
+
+    if (error) {
+      console.error("Saving triage failed:", error.message);
+      return false;
+    }
+    return true;
+  } catch (error) {
+    console.error(
+      "AI triage failed:",
+      error instanceof Error ? error.message : "unknown error",
+    );
+    return false;
+  }
+}
 
 const ticketSchema = z.object({
   customer_name: z
@@ -66,15 +115,49 @@ export async function createTicket(
     redirect("/login");
   }
 
-  const { error } = await supabase.from("tickets").insert(parsed.data);
-  if (error) {
-    console.error("createTicket failed:", error.message);
+  const { data, error } = await supabase
+    .from("tickets")
+    .insert(parsed.data)
+    .select("id")
+    .single();
+  if (error || !data) {
+    console.error("createTicket failed:", error?.message);
     return {
       error: "We could not save the ticket. Please try again.",
       values,
     };
   }
 
+  // The ticket is already saved. If the AI fails, the dashboard shows a retry button.
+  await runTriage(supabase, data.id, parsed.data);
+
   revalidatePath("/dashboard");
   redirect("/dashboard");
+}
+
+export async function retryTriage(formData: FormData): Promise<void> {
+  const parsedId = z.uuid().safeParse(String(formData.get("id") ?? ""));
+  if (!parsedId.success) {
+    return;
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    redirect("/login");
+  }
+
+  const { data, error } = await supabase
+    .from("tickets")
+    .select("customer_name, subject, body")
+    .eq("id", parsedId.data)
+    .single();
+  if (error || !data) {
+    return;
+  }
+
+  await runTriage(supabase, parsedId.data, data);
+  revalidatePath("/dashboard");
 }

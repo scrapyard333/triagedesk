@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Inbox, Plus, Sparkles } from "lucide-react";
+import { RetryTriageForm } from "@/components/retry-triage-form";
+import { TriageBadges } from "@/components/triage-badges";
 import { createClient } from "@/lib/supabase/server";
 import { STATUS_LABEL, type Ticket } from "@/lib/types";
 
@@ -19,7 +21,7 @@ export default async function DashboardPage() {
   const { data, error } = await supabase
     .from("tickets")
     .select(
-      "id, customer_name, customer_email, subject, status, category, urgency, sentiment, created_at",
+      "id, customer_name, customer_email, subject, status, category, urgency, sentiment, summary, suggested_reply, ai_confidence, created_at",
     )
     .order("created_at", { ascending: false })
     .limit(50);
@@ -29,8 +31,10 @@ export default async function DashboardPage() {
     { label: "Total", value: tickets.length },
     { label: "Open", value: tickets.filter((t) => t.status === "open").length },
     {
-      label: "In progress",
-      value: tickets.filter((t) => t.status === "in_progress").length,
+      label: "Urgent",
+      value: tickets.filter(
+        (t) => t.urgency === "high" || t.urgency === "critical",
+      ).length,
     },
     {
       label: "Resolved",
@@ -44,7 +48,7 @@ export default async function DashboardPage() {
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Tickets</h1>
           <p className="mt-1 text-sm text-muted">
-            Every customer message in one place.
+            Every customer message, triaged by AI.
           </p>
         </div>
         <Link
@@ -86,7 +90,7 @@ export default async function DashboardPage() {
           </span>
           <h2 className="mt-4 font-semibold">No tickets yet</h2>
           <p className="mx-auto mt-2 max-w-sm text-sm text-muted">
-            Add your first customer message and it will show up here.
+            Add your first customer message and AI will label it in seconds.
           </p>
           <Link
             href="/dashboard/tickets/new"
@@ -115,14 +119,35 @@ export default async function DashboardPage() {
                 {ticket.customer_name} · {ticket.customer_email} ·{" "}
                 {dateFormat.format(new Date(ticket.created_at))}
               </p>
-              {!ticket.category && (
-                <p className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-surface-2 px-2.5 py-1 text-xs text-muted">
-                  <Sparkles
-                    className="size-3.5 text-primary"
-                    aria-hidden="true"
-                  />
-                  Awaiting AI triage
-                </p>
+
+              {ticket.category ? (
+                <div className="mt-3 space-y-3">
+                  <TriageBadges ticket={ticket} />
+                  {ticket.summary && (
+                    <p className="text-sm leading-relaxed">{ticket.summary}</p>
+                  )}
+                  {ticket.suggested_reply && (
+                    <details className="rounded-xl bg-surface-2 p-3 text-sm">
+                      <summary className="cursor-pointer font-medium">
+                        Draft reply
+                      </summary>
+                      <p className="mt-2 whitespace-pre-wrap leading-relaxed text-muted">
+                        {ticket.suggested_reply}
+                      </p>
+                    </details>
+                  )}
+                </div>
+              ) : (
+                <div className="mt-3 flex flex-wrap items-center gap-3">
+                  <p className="inline-flex items-center gap-1.5 rounded-full bg-surface-2 px-2.5 py-1 text-xs text-muted">
+                    <Sparkles
+                      className="size-3.5 text-primary"
+                      aria-hidden="true"
+                    />
+                    Awaiting AI triage
+                  </p>
+                  <RetryTriageForm ticketId={ticket.id} />
+                </div>
               )}
             </li>
           ))}
