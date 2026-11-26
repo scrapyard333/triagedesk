@@ -108,7 +108,7 @@ export default async function DashboardPage() {
               className="rounded-card border bg-surface p-4 shadow-card"
             >
               <div className="flex flex-wrap items-start justify-between gap-2">
-                <h2 className="font-semibold">{ticket.subject}</h2>
+                <h2 className="font-semibold"><Link href={`/dashboard/tickets/${ticket.id}`} className="transition hover:text-primary">{ticket.subject}</Link></h2>
                 <span
                   className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${statusTone[ticket.status]}`}
                 >

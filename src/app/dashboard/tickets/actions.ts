@@ -152,6 +152,7 @@ export async function retryTriage(formData: FormData): Promise<void> {
   const { data, error } = await supabase
     .from("tickets")
     .select("customer_name, subject, body")
+    .is("triaged_at", null)
     .eq("id", parsedId.data)
     .single();
   if (error || !data) {
