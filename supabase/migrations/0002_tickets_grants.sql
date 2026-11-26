@@ -5,4 +5,5 @@
 
 grant usage on schema public to authenticated;
 grant select, insert, update, delete on public.tickets to authenticated;
+revoke truncate, references, trigger on public.tickets from authenticated;
 revoke all on public.tickets from anon;
