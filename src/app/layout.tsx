@@ -1,6 +1,11 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+
+const SITE_URL = "https://triagedesk-roan.vercel.app";
+const TITLE = "TriageDesk | AI support ticket triage";
+const DESCRIPTION =
+  "TriageDesk reads every support ticket, labels its category, urgency and sentiment, and drafts a reply, so your team starts with the right work first.";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -13,12 +18,33 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
+  applicationName: "TriageDesk",
   title: {
-    default: "TriageDesk | AI support ticket triage",
+    default: TITLE,
     template: "%s | TriageDesk",
   },
-  description:
-    "TriageDesk reads every support ticket, labels its category, urgency and sentiment, and drafts a reply, so your team starts with the right work first.",
+  description: DESCRIPTION,
+  authors: [{ name: "Kousar Abbas", url: "https://github.com/scrapyard333" }],
+  openGraph: {
+    type: "website",
+    siteName: "TriageDesk",
+    title: TITLE,
+    description: DESCRIPTION,
+    url: SITE_URL,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: TITLE,
+    description: DESCRIPTION,
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f6f7fb" },
+    { media: "(prefers-color-scheme: dark)", color: "#0a0c14" },
+  ],
 };
 
 // Runs before first paint so the saved theme loads without a flash.

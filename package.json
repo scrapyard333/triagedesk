@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "screenshots": "node scripts/screenshots.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",
@@ -25,7 +26,16 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.4.6",
+    "playwright": "^1.65.1",
     "tailwindcss": "4.3.3",
     "typescript": "^5"
+  },
+  "description": "AI-assisted support ticket triage: category, urgency, sentiment, summary and draft reply for every ticket.",
+  "author": "Kousar Abbas",
+  "license": "MIT",
+  "homepage": "https://triagedesk-roan.vercel.app",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/scrapyard333/triagedesk.git"
   }
 }
